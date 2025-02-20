@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/user/signout" class="btn btn--secondary">Sign Out</a>
+<div class="card-wrapper">
+    <div class="card">
+        <h2 class="center">Your info</h2>
+        <p>
+            <strong>ID:</strong> {{session['user']['_id']}}<br>
+            <strong>Name:</strong> {{session['user']['name']}}<br>
+            <strong>Email:</strong> {{session['user']['email']}}
+        </p>
+        <img src="{{ user['profile_picture'] }}" alt="This is the Avatar" class="avatar">
+    </div>
+
+    <div class="card">
+        <h2 class="center">Change info</h2>
+        <form action="/update_info" method="POST" enctype="multipart/form-data">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ user.name }}"><br><br>
+
+            <label for="old_password">Old Password:</label>
+            <input type="password" id="old_password" name="old_password">
+            <label for="password">New Password:</label>
+            <input type="password" id="password" name="password">
+            <label for="confirm_password">Confirm New Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password"><br><br>
+
+            <label for="file">Upload new profile Picture:</label>
+            <input type="file" name="file"><br><br>
+
+            <div class="center">
+                <input type="submit" value="Update Profile" class="btn">
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+<!-- admin1@gmail.com -->
