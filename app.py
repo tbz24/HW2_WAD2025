@@ -5,9 +5,11 @@ import uuid
 from werkzeug.utils import secure_filename
 import os
 from passlib.hash import pbkdf2_sha256
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 app.secret_key = uuid.uuid4().hex
+socketio = SocketIO(app)  # Initialize SocketIO
 
 # Database
 client = pymongo.MongoClient('localhost', 27017)
@@ -21,6 +23,20 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Websocket
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+    emit('notification', {'message': 'You are now connected!'})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
+
+def notify_users(message):
+    # Broadcast the notification to all connected clients
+    emit('new_account_notification', {'message': message}, namespace='/', broadcast=True)
 
 class User:
     def start_session(self, user):
@@ -47,6 +63,8 @@ class User:
             return jsonify({"error": "Email address already in use"}), 400
         
         if db.users.insert_one(user):
+            # Notify all connected clients about the new account
+            notify_users(f"New account created: {user['name']}")
             return self.start_session(user)
        
         return jsonify({"error": "Signup failed"}), 400
@@ -156,8 +174,9 @@ def update_info():
         user = User().update_profile(user_id, filename, name, new_password)
         return render_template('profile.html', user=user)
 
+
 if __name__ == '__main__':
     # Ensure the upload folder exists
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(debug=True)
+    socketio.run(app, debug=True)  # Use socketio.run instead of app.run
