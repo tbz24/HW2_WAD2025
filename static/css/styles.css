@@ -3,6 +3,15 @@
 */
 
 /* Setup */
+.flash-message {
+  transition: opacity 1s ease-in-out;
+  text-align: center;
+  color: green;
+}
+
+.flash-message.fade-out {
+  opacity: 0;
+}
 
 .avatar {
   display: block;

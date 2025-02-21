@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, request, jsonify
+from flask import Flask, render_template, session, redirect, request, jsonify, flash
 from functools import wraps
 import pymongo
 import uuid
@@ -9,16 +9,16 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 app.secret_key = uuid.uuid4().hex
-socketio = SocketIO(app)  # Initialize SocketIO
+socketio = SocketIO(app)
 
 # Database
 client = pymongo.MongoClient('localhost', 27017)
 db = client.auth_app
 
 # Configuration
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'images')  # Correct way
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'images')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-DEFAULT_PROFILE_PICTURE = '/static/images/default_profile.jpg'  # Default profile picture path
+DEFAULT_PROFILE_PICTURE = '/static/images/default_profile.jpg'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -28,7 +28,6 @@ def allowed_file(filename):
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
-    emit('notification', {'message': 'You are now connected!'})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -46,13 +45,12 @@ class User:
         return jsonify(user), 200
 
     def signup(self):
-        # Create the user object
         user = {
             "_id": uuid.uuid4().hex,
             "name": request.form.get('name'),
             "email": request.form.get('email'),
             "password": request.form.get('password'),
-            "profile_picture": DEFAULT_PROFILE_PICTURE  # Set default profile picture
+            "profile_picture": DEFAULT_PROFILE_PICTURE
         }
 
         # Encrypt the password
@@ -64,13 +62,15 @@ class User:
         
         if db.users.insert_one(user):
             # Notify all connected clients about the new account
-            notify_users(f"New account created: {user['name']}")
+            notify_users(f"New account created! His/her name: {user['name']}")
+            flash('You have successfully signed up!')
             return self.start_session(user)
        
         return jsonify({"error": "Signup failed"}), 400
     
     def signout(self):
         session.clear()
+        flash('You have successfully logged out!')
         return redirect('/')
     
     def login(self):
@@ -79,6 +79,7 @@ class User:
         })
 
         if user and pbkdf2_sha256.verify(request.form.get('password'), user['password']):
+            flash('You have successfully logged in!')
             return self.start_session(user)
         
         return jsonify({"error": "Invalid login credentials"}), 401
@@ -100,6 +101,7 @@ class User:
         user = db.users.find_one({"_id": user_id})
         session['user'] = user
         del user['password']
+        flash('You have successfully updated your profile information!')
         return user
 
 # Decorators
@@ -133,7 +135,7 @@ def home():
 @login_required
 def profile():
     user = session['user']
-    return render_template('profile.html', user=user)  # Pass the user object to the template
+    return render_template('profile.html', user=user)
 
 @app.route('/update_info', methods=['POST'])
 @login_required
@@ -141,27 +143,23 @@ def update_info():
     if request.method == 'POST':
         user_id = session['user']['_id']
         name = request.form.get('name')
-        old_password = request.form.get('old_password')  # New field for old password
-        new_password = request.form.get('password')  # New password field
-        confirm_password = request.form.get('confirm_password')  # Confirm new password field
-        file = request.files.get('file')  # Use .get() to avoid KeyError if no file is uploaded
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        file = request.files.get('file')
         filename = None
 
-        # Query the current user from the database
         user = db.users.find_one({"_id": user_id})
 
-        # Check if the old password is correct
         if old_password!='':
             if not pbkdf2_sha256.verify(old_password, user['password']):
                 return jsonify({"error": "Old password is incorrect"}), 400
-            # Check if new password and confirm password match
             if new_password and new_password != confirm_password:
                 return jsonify({"error": "New passwords do not match"}), 400
 
         if file:
             if allowed_file(file.filename):
                 try:
-                    # Create a unique filename
                     file_extension = file.filename.rsplit('.', 1)[1].lower()
                     filename = secure_filename(user_id + '.' + file_extension)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
