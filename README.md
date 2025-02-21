@@ -20,8 +20,6 @@ The 2nd homework assigment\
 ```bash
 HW2_WAD2025/main\
 |-- README.md
-|-- __pycache__
-|   `-- app.cpython-313.pyc
 |-- app.py
 |-- run
 |-- static
@@ -34,15 +32,9 @@ HW2_WAD2025/main\
 |       |-- jquery.js
 |       `-- scripts.js
 |-- templates
-|   |-- base.html
-|   |-- home.html
-|   `-- profile.html
-`-- user
-    |-- __init__.py
-    `-- __pycache__
-        |-- __init__.cpython-313.pyc
-        |-- models.cpython-313.pyc
-        `-- routes.cpython-313.pyc
+    |-- base.html
+    |-- home.html
+    `-- profile.html
 ```
 ## HOW TO RUN
 1. Requirements:
@@ -101,7 +93,7 @@ Picture 1.1
 
 **2.3 Allow users to update profile picture (new user will have a default profile picture)**\
 <div align="center">
-       <img src="static/images/change_picture.png" alt="Login Page">
+       <img src="static/images/change_picture.PNG" alt="Login Page">
 </div>
 
 **2.4 Allow users to update profile information**
@@ -109,7 +101,7 @@ Picture 1.1
 - Picture 2.3 - Change picture
 - Change name:
 <div align="center">
-       <img src="static/images/change_name.png" alt="Login Page">
+       <img src="static/images/change_name.PNG" alt="Login Page">
 </div>
 
 
@@ -117,12 +109,12 @@ Picture 1.1
 Implement notification, an active user will receive notification when a new account is created.
 - Database:
 <div align="center">
-       <img src="static/images/db2.png" alt="Login Page">
+       <img src="static/images/db2.PNG" alt="Login Page">
 </div>
 - Active users receive notification:
 <div align="center">
-       <img src="static/images/noti1.png" alt="Login Page">
+       <img src="static/images/noti1.PNG" alt="Login Page">
 </div>
 <div align="center">
-       <img src="static/images/noti2.png" alt="Login Page">
+       <img src="static/images/noti2.PNG" alt="Login Page">
 </div>
